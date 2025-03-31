@@ -31,7 +31,7 @@ end
 filename = 'submission.csv';
 
 % Intestazione (colonne)
-header = ["SampleID"];
+header = "SampleID";
 for k = 0:10
     header = [header, "HealthState_" + k];
 end
