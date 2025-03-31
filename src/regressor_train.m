@@ -6,31 +6,38 @@ clc;
 
 num_modes = 10;
 
+%% Divisione in Training/Validation set
+cv = cvpartition(size(X_features, 1), 'HoldOut', 0.2);
+idxTrain = training(cv);
+idxVal = test(cv);
+
+X_train = X_features(idxTrain, :);
+y_train = y_targets(idxTrain);
+
+X_val = X_features(idxVal, :);
+y_val = y_targets(idxVal);
+
 %% Allenamento regressore su tutti i dati
-disp('Allenamento regressore XGBoost su tutti i dati...');
-model = fitrensemble(X_features, y_targets, ...
-    'Method', 'LSBoost', 'NumLearningCycles', 100);
+disp('Allenamento su training set...');
+model = fitrensemble(X_train, y_train, 'Method', 'LSBoost', 'NumLearningCycles', 100);
 
-%% Predizione su tutti i dati di training (auto-valutazione)
-disp('🔍 Predizione su tutti i dati di training...');
-y_pred_all = predict(model, X_features);
-y_true = y_targets;
+%% Predizione sul validation set
+y_val_pred = predict(model, X_val);
 
-%% Calcolo metriche
-MAE  = mean(abs(y_true - y_pred_all));
-MSE  = mean((y_true - y_pred_all).^2);
-RMSE = sqrt(MSE);
-R2   = 1 - sum((y_true - y_pred_all).^2) / sum((y_true - mean(y_true)).^2);
+%% Calcolo degli errori sulla validation
+val_errors = y_val - y_val_pred;
 
-%% Risultati
-fprintf('\nValutazione modello Koopman (training set):\n');
-fprintf('MAE  = %.4f\n', MAE);
-fprintf('RMSE = %.4f\n', RMSE);
-fprintf('R^2  = %.4f\n', R2);
+% Calcolo statistico dell’errore
+mu_err = mean(val_errors);           % media dell’errore
+sigma_err = std(val_errors);        % deviazione standard
+fprintf('\n Errore su validation set:\n');
+fprintf('Errore medio     = %.4f\n', mu_err);
+fprintf('Deviazione std.  = %.4f\n', sigma_err);
+% Distribuzione usata successivamente per stimare probabilità/confidenza
 
-y_pred_smooth = movmean(y_pred_all, 15);  % Prova con 15 file di finestra
+%% Visualizzazione
+y_pred_smooth = movmean(y_pred_all, 15);
 
-%% Visualizzazione predizione vs reale (con predizione smussata)
 figure;
 plot(y_true, 'b-', 'LineWidth', 1.5); hold on;
 plot(y_pred_smooth, 'r--', 'LineWidth', 1.5);

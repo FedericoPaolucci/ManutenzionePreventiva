@@ -29,9 +29,10 @@ for i = 1:length(folders)
         % Salva il file nella lista
         data_all{end+1} = data;
 
-        % Etichetta normalizzata tra 0 e 1
-        label = (i-1) / (length(folders)-1); % Healthy = 0, Max fault = 1
-        labels(end+1) = label;
+        % Estrai il numero del livello di guasto dal nome della cartella
+        level = regexp(folder_name, '\d+', 'match');
+        level_num = str2double(level{end}); % prende il livello di guasto scritto sulla cartella
+        labels(end+1) = level_num;
     end
 end
 

@@ -1,5 +1,5 @@
 %% Estrazione delle feature Koopman per il set di TEST
-window_size = 1024;
+window_size = 4096;
 num_modes = 10;
 num_files_test = length(data_test_all);
 

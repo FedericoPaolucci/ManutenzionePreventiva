@@ -1,7 +1,7 @@
 clc; 
 
 %%  Parametri
-window_size = 1024;
+window_size = 4096; % La frequenza di campionamento del segnale è 20480 Hz. Una finestra di 4096 campioni corrisponde a 0.2 secondi.
 num_modes = 10;  % Numero di modi Koopman da estrarre
 num_files = length(data_all);  % Numero di file caricati
 
