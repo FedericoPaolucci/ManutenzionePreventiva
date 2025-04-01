@@ -1,10 +1,15 @@
+clc
+disp('Inizio estrazione feature Koopman per il set di test...');
+
 %% Estrazione delle feature Koopman per il set di TEST
-window_size = 4096;
+window_size = 2048;
 num_modes = 10;
 num_files_test = length(data_test_all);
 
 % Preallocazione delle feature
 X_features_test = zeros(num_files_test, num_modes * 4);
+
+h = waitbar(0, 'Estrazione feature Koopman test...'); % Waitbar
 
 for k = 1:num_files_test
     data = data_test_all{k};
@@ -42,9 +47,12 @@ for k = 1:num_files_test
     % Salvataggio
     X_features_test(k,:) = features;
 
-    if mod(k, 100) == 0
-        disp(['File test elaborati: ', num2str(k), ' su ', num2str(num_files_test)]);
-    end
+    waitbar(k / num_files_test, h, ['Elaborazione file test ', num2str(k), ' di ', num2str(num_files_test)]);
 end
 
+close(h);
 disp('Estrazione delle feature Koopman per il test completata.');
+
+% Salvataggio dei risultati
+save('koopman_test_features.mat', 'X_features_test');
+disp('"koopman_test_features.mat" salvato con successo');
