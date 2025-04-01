@@ -6,10 +6,19 @@ window_size = 2048; % Window size scelta data la frequenza di campionamento del 
 num_modes = 10;  % Numero di modi Koopman da estrarre
 num_files = length(data_all);  % Numero di file caricati
 
-% Preallocazione delle feature (10 reali, 10 immaginari, 10 ampiezze, 10 growth rates)
-disp('Preallocazione delle matrici...');
-X_features = zeros(num_files, num_modes * 4);
-y_targets = zeros(num_files, 1);
+% Verifica se esiste un salvataggio parziale
+if isfile('partial_koopman_features.mat')
+    disp('Salvataggio parziale trovato. Riprendo da dove avevo interrotto...');
+    load('partial_koopman_features.mat');  % Carica X_features, y_targets, k
+    start_idx = k + 1;
+else
+    disp('Inizio da zero...');
+    % Preallocazione delle feature (10 reali, 10 immaginari, 10 ampiezze, 10 growth rates)
+    disp('Preallocazione delle matrici...');
+    X_features = zeros(num_files, num_modes * 4);
+    y_targets = zeros(num_files, 1);
+    start_idx = 1;
+end
 
 tic;  % Per monitorare il tempo totale
 
@@ -19,7 +28,7 @@ h = waitbar(0, 'Inizio estrazione delle feature Koopman...');
 
 %% Estrazione feature da ciascun file
 disp('Inizio estrazione delle feature dai file...');
-for k = 1:num_files
+for k = start_idx:num_files
     waitbar(k/num_files, h, ['Elaborazione file ', num2str(k), ' di ', num2str(num_files)]); % waitbar
 
     disp(['File #', num2str(k), ' su ', num2str(num_files)]);
@@ -67,9 +76,17 @@ for k = 1:num_files
     % Salvataggio
     X_features(k, :) = features;
     y_targets(k) = label;
+    % Salvataggio incrementale ogni 20 file
+    if mod(k, 20) == 0 || k == num_files
+        save('partial_koopman_features.mat', 'X_features', 'y_targets', 'k');
+        disp(['Salvato parzialmente dopo ', num2str(k), ' file.']);
+    end
+
 end
 
 close(h);  % Chiude la waitbar
 disp(['Estrazione completata in ', num2str(toc, '%.2f'), ' secondi']);
 save('koopman_features.mat', 'X_features', 'y_targets');
 disp('"koopman_features.mat" salvato con successo.');
+delete('partial_koopman_features.mat');
+disp('Pulizia completata.');

@@ -6,12 +6,21 @@ window_size = 2048;
 num_modes = 10;
 num_files_test = length(data_test_all);
 
-% Preallocazione delle feature
-X_features_test = zeros(num_files_test, num_modes * 4);
+%% Controllo salvataggio parziale
+if isfile('partial_koopman_test_features.mat')
+    disp('Salvataggio parziale trovato. Riprendo da dove avevo interrotto...');
+    load('partial_koopman_test_features.mat');  % X_features_test, k
+    start_idx_test = k + 1;
+else
+    disp('Inizio da zero...');
+    % Preallocazione delle feature
+    X_features_test = zeros(num_files_test, num_modes * 4);
+    start_idx_test = 1;
+end
 
 h = waitbar(0, 'Estrazione feature Koopman test...'); % Waitbar
 
-for k = 1:num_files_test
+for k = start_idx_test:num_files_test
     data = data_test_all{k};
 
     % Uso dell'asse X
@@ -48,6 +57,13 @@ for k = 1:num_files_test
     X_features_test(k,:) = features;
 
     waitbar(k / num_files_test, h, ['Elaborazione file test ', num2str(k), ' di ', num2str(num_files_test)]);
+
+    % Salvataggio ogni 20 file o ultimo
+    if mod(k, 20) == 0 || k == num_files_test
+        save('partial_koopman_test_features.mat', 'X_features_test', 'k');
+        disp(['Salvato parzialmente dopo ', num2str(k), ' file.']);
+    end
+
 end
 
 close(h);
@@ -55,4 +71,5 @@ disp('Estrazione delle feature Koopman per il test completata.');
 
 % Salvataggio dei risultati
 save('koopman_test_features.mat', 'X_features_test');
+delete('partial_koopman_test_features.mat');
 disp('"koopman_test_features.mat" salvato con successo');
