@@ -1,12 +1,13 @@
 clc;
 
 %% Caricamento delle feature Koopman già estratte per il training
+% Se non sono nel workspace, si caricano con: 
 load('koopman_features.mat'); % contiene X_features, y_targets
 
 num_modes = 10;
 
 %% Divisione training / validation stratificata 80/20 per ciascun livello di guasto
-disp('Inizio divisione training / validation stratificata 80/20 per ciascun livello di guasto...');
+disp('Inizio Divisione training / validation stratificata 80/20 per ciascun livello di guasto...');
 
 unique_labels = unique(y_targets);
 X_train = [];
@@ -36,11 +37,11 @@ for i = 1:length(unique_labels)
     fprintf('Classe %d → %d train, %d val\n', label, length(train_idx), length(val_idx));
 end
 
-disp('Divisione stratificata completata.');
+disp('✅ Divisione stratificata completata.');
 
 %% Allenamento regressore su tutti i dati
 disp('Allenamento su training set...');
-model = fitrensemble(X_train, y_train, 'Method', 'LSBoost', 'NumLearningCycles', 1000);
+model = fitrensemble(X_train, y_train, 'Method', 'LSBoost', 'NumLearningCycles', 100);
 
 %% Predizione sul validation set
 y_val_pred = predict(model, X_val);
@@ -48,12 +49,13 @@ y_val_pred = predict(model, X_val);
 %% Calcolo degli errori sulla validation
 val_errors = y_val - y_val_pred;
 
-% Statistiche errore
-mu_err = mean(val_errors);
-sigma_err = std(val_errors);
-fprintf('\nErrore su validation set:\n');
+% Calcolo statistico dell’errore
+mu_err = mean(val_errors);           % media dell’errore
+sigma_err = std(val_errors);        % deviazione standard
+fprintf('\n Errore su validation set:\n');
 fprintf('Errore medio     = %.4f\n', mu_err);
 fprintf('Deviazione std.  = %.4f\n', sigma_err);
+% Distribuzione usata successivamente per stimare probabilità/confidenza
 
 %% Visualizzazione
 y_pred_smooth = movmean(y_val_pred, 15);
