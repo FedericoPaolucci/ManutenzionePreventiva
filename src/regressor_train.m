@@ -1,7 +1,9 @@
 clc;
 
 %% Caricamento delle feature Koopman già estratte per il training
-load('koopman_features.mat'); % contiene 'X_features', 'y_targets', 'K', 'koopman_eigvals', 'num_modes'
+load('koopman_features.mat'); % contiene X_features, y_targets
+
+num_modes = 10;
 
 %% Divisione training / validation stratificata 80/20 per ciascun livello di guasto
 disp('Inizio divisione training / validation stratificata 80/20 per ciascun livello di guasto...');
@@ -25,9 +27,10 @@ for i = 1:length(unique_labels)
     val_idx = idx(n_train+1:end);
 
     % Aggiunta ai set
-    X_train = [X_train; X_features(train_idx,:)];
+    X_train = [X_train; X_features(train_idx, :)];
     y_train = [y_train; y_targets(train_idx)];
-    X_val = [X_val; X_features(val_idx,:)];
+
+    X_val = [X_val; X_features(val_idx, :)];
     y_val = [y_val; y_targets(val_idx)];
 
     fprintf('Classe %d → %d train, %d val\n', label, length(train_idx), length(val_idx));
@@ -42,20 +45,24 @@ model = fitrensemble(X_train, y_train, 'Method', 'LSBoost', 'NumLearningCycles',
 %% Predizione sul validation set
 y_val_pred = predict(model, X_val);
 
-mae = mean(abs(y_val - y_val_pred));
-rmse = sqrt(mean((y_val - y_val_pred).^2));
-r2 = 1 - sum((y_val - y_val_pred).^2)/sum((y_val - mean(y_val)).^2);
+%% Calcolo degli errori sulla validation
+val_errors = y_val - y_val_pred;
 
-fprintf('MAE  = %.4f\n', mae);
-fprintf('RMSE = %.4f\n', rmse);
-fprintf('R²   = %.4f\n', r2);
+% Statistiche errore
+mu_err = mean(val_errors);
+sigma_err = std(val_errors);
+fprintf('\nErrore su validation set:\n');
+fprintf('Errore medio     = %.4f\n', mu_err);
+fprintf('Deviazione std.  = %.4f\n', sigma_err);
 
 %% Visualizzazione
+y_pred_smooth = movmean(y_val_pred, 15);
+
 figure;
 plot(y_val, 'b-', 'LineWidth', 1.5); hold on;
-plot(movmean(y_val_pred, 15), 'r--', 'LineWidth', 1.5);
-legend('Reale', 'Predetto');
+plot(y_pred_smooth, 'r--', 'LineWidth', 1.5);
+legend('Reale (Validation)', 'Predetto (smussato)');
 xlabel('Campione');
-ylabel('Health State');
-title('Validazione Koopman + Regressore');
+ylabel('Grado di guasto');
+title('Predizione sul Validation Set - Modello Koopman');
 grid on;

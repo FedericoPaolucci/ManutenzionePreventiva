@@ -1,4 +1,3 @@
-% vecchio codice
 clc
 disp('Inizio estrazione feature Koopman per il set di test...');
 
