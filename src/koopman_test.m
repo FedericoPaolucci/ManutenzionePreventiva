@@ -1,7 +1,7 @@
 clc
 disp('Inizio estrazione feature Koopman per il set di test...');
 
-%% Estrazione delle feature Koopman per il set di TEST
+%% Parametri
 window_size = 2048;
 num_modes = 10;
 num_files_test = length(data_test_all);
@@ -20,6 +20,7 @@ end
 
 h = waitbar(0, 'Estrazione feature Koopman test...'); % Waitbar
 
+%% Estrazione feature per ogni file del set di test
 for k = start_idx_test:num_files_test
     data = data_test_all{k};
 
@@ -28,12 +29,12 @@ for k = start_idx_test:num_files_test
     X1 = X1(:, 1:end-1);
     X1_next = X1(:, 2:end);
 
-    % Allineamento snapshot
+    % Allineamento snapshot per avere lo stesso numero di colonne
     num_snapshots = min(size(X1,2), size(X1_next,2));
     X1 = X1(:,1:num_snapshots);
     X1_next = X1_next(:,1:num_snapshots);
 
-    % Koopman
+    % Koopman, estrazione features
     [koopman_eigvals, koopman_modes] = koopman_EDMD(X1, X1_next, num_modes);
 
     koopman_real = real(koopman_eigvals);
