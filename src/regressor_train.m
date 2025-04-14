@@ -46,7 +46,7 @@ y_val   = y_augmented(test(cv));
 %model_ensemble = fitrensemble(X_train, y_train, 'Method', 'Bag', 'NumLearningCycles', 200); % Bag; 200 alberi
 disp("Addestramento fitrnet...");
 model_net = fitrnet(X_train, y_train, ...
-    'LayerSizes', [32, 16], ...
+    'LayerSizes', [64, 32, 16], ...
     'Activations', 'relu', ...
     'Standardize', true, ...
     'Verbose', 1);
@@ -135,15 +135,13 @@ cm_ens = confusionchart(y_gt_rounded, y_pred_rounded, ...
 
 %% ...sul set di test vengono predette le classi:
 
-X_features_prova1 = normalize(X_features_test);
-y_pred1 = predict(model_net, X_features_prova1);
+% Approssimiamo le predizioni a interi nel range 0–10
+y_pred_rounded_test = max(0, min(10, round(y_pred1)));
 
-y_gt_rounded1 = zeros(800, 1);
-y_pred_rounded = max(0, min(10, round(y_pred1)));
-
-figure('Name','Matrice di Confusione - Set completo');
-cm_ens1 = confusionchart(y_gt_rounded1, y_pred_rounded, ...
-    'RowSummary','row-normalized', ...
-    'ColumnSummary','column-normalized', ...
-    'Title','Matrice di Confusione finale - fitrnet', ...
-    'XLabel','Predetto', 'YLabel','Reale');
+% Istogramma della distribuzione delle classi predette
+figure('Name','Distribuzione delle predizioni - Test set');
+histogram(y_pred_rounded_test, 'BinEdges', -0.5:1:10.5, 'FaceColor', [0.2 0.4 0.8]);
+xlabel('Classe Predetta');
+ylabel('Conteggio');
+title('Distribuzione delle Classi Predette - Set di Test');
+grid on;
