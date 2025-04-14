@@ -43,16 +43,16 @@ y_val   = y_augmented(test(cv));
 
 %% Addestramento modello fitrnet -- [precedentemente fitrensemble (regressione con alberi e Bagging)]
 %disp("Addestramento fitrensemble...");
-disp("Addestramento fitrnet...");
 %model_ensemble = fitrensemble(X_train, y_train, 'Method', 'Bag', 'NumLearningCycles', 200); % Bag; 200 alberi
-model_ensemble = fitrnet(X_train, y_train, ...
+disp("Addestramento fitrnet...");
+model_net = fitrnet(X_train, y_train, ...
     'LayerSizes', [32, 16], ...
     'Activations', 'relu', ...
     'Standardize', true, ...
     'Verbose', 1);
 
 %% Valutazione sul validation set
-y_val_pred_ensemble = predict(model_ensemble, X_val);
+y_val_pred_ensemble = predict(model_net, X_val);
 
 % Valori di errore MAE e RMSE
 fprintf("Errore fitrnet: MAE = %.4f | RMSE = %.4f\n", ...
@@ -87,7 +87,7 @@ cm_ens = confusionchart(y_val, y_pred_ens_rounded, ...
 
 %% Predizione su tutto il set X_features e salvataggio CSV
 X_features_prova = normalize(X_features);
-y_pred = predict(model_ensemble, X_features_prova);
+y_pred = predict(model_net, X_features_prova);
 
 val_errors = y_val - y_val_pred_ensemble;
 b_err = std(val_errors) / sqrt(2);  % Parametro di scala Laplace
@@ -136,7 +136,7 @@ cm_ens = confusionchart(y_gt_rounded, y_pred_rounded, ...
 %% ...sul set di test vengono predette le classi:
 
 X_features_prova1 = normalize(X_features_test);
-y_pred1 = predict(model_ensemble, X_features_prova1);
+y_pred1 = predict(model_net, X_features_prova1);
 
 y_gt_rounded1 = zeros(800, 1);
 y_pred_rounded = max(0, min(10, round(y_pred1)));
