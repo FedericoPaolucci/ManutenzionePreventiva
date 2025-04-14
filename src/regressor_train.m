@@ -134,9 +134,10 @@ cm_ens = confusionchart(y_gt_rounded, y_pred_rounded, ...
     'XLabel','Predetto', 'YLabel','Reale');
 
 %% ...sul set di test vengono predette le classi:
+y_pred_test = predict(model_net, X_features_test);
 
 % Approssimiamo le predizioni a interi nel range 0–10
-y_pred_rounded_test = max(0, min(10, round(y_pred1)));
+y_pred_rounded_test = max(0, min(10, round(y_pred_test)));
 
 % Istogramma della distribuzione delle classi predette
 figure('Name','Distribuzione delle predizioni - Test set');
