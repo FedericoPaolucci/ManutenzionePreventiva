@@ -41,29 +41,35 @@ y_train = y_augmented(training(cv));
 X_val   = X_augmented(test(cv), :);
 y_val   = y_augmented(test(cv));
 
-%% Addestramento modello fitrensemble (regressione con alberi e Bagging)
-disp("Addestramento fitrensemble...");
-model_ensemble = fitrensemble(X_train, y_train, 'Method', 'Bag', 'NumLearningCycles', 200); % Bag; 200 alberi
+%% Addestramento modello fitrnet -- [precedentemente fitrensemble (regressione con alberi e Bagging)]
+%disp("Addestramento fitrensemble...");
+disp("Addestramento fitrnet...");
+%model_ensemble = fitrensemble(X_train, y_train, 'Method', 'Bag', 'NumLearningCycles', 200); % Bag; 200 alberi
+model_ensemble = fitrnet(X_train, y_train, ...
+    'LayerSizes', [32, 16], ...
+    'Activations', 'relu', ...
+    'Standardize', true, ...
+    'Verbose', 1);
 
 %% Valutazione sul validation set
 y_val_pred_ensemble = predict(model_ensemble, X_val);
 
 % Valori di errore MAE e RMSE
-fprintf("Errore fitrensemble: MAE = %.4f | RMSE = %.4f\n", ...
+fprintf("Errore fitrnet: MAE = %.4f | RMSE = %.4f\n", ...
     mean(abs(y_val - y_val_pred_ensemble)), sqrt(mean((y_val - y_val_pred_ensemble).^2)));
 
-%% Plot fitrensemble
+%% Plot fitrnet
 [~, sort_idx] = sort(y_val);
 y_val_sorted = y_val(sort_idx);
 y_val_pred_ensemble_sorted = y_val_pred_ensemble(sort_idx);
 
-figure('Name', 'Reale vs Predetto - fitrensemble');
+figure('Name', 'Reale vs Predetto - fitrnet');
 plot(y_val_sorted, 'k-', 'LineWidth', 1.5); hold on;
 plot(y_val_pred_ensemble_sorted, 'b--', 'LineWidth', 1.5);
-legend('Reale', 'Predetto (fitrensemble)');
+legend('Reale', 'Predetto (fitrnet)');
 xlabel('Campione (ordinato per y\_val)');
 ylabel('Health State');
-title('Confronto Reale vs Predetto - fitrensemble');
+title('Confronto Reale vs Predetto - fitrnet');
 grid on;
 
 %% Matrici di Confusione
@@ -72,11 +78,11 @@ y_val_rounded = max(0, min(10, round(y_val)));
 y_pred_ens_rounded = max(0, min(10, round(y_val_pred_ensemble)));
 classes = 0:10;
 
-figure('Name','Confusione - fitrensemble');
+figure('Name','Confusione - fitrnet');
 cm_ens = confusionchart(y_val, y_pred_ens_rounded, ...
     'RowSummary','row-normalized', ...
     'ColumnSummary','column-normalized', ...
-    'Title','Matrice di Confusione (Validation) - fitrensemble', ...
+    'Title','Matrice di Confusione (Validation) - fitrnet', ...
     'XLabel','Predetto', 'YLabel','Reale');
 
 %% Predizione su tutto il set X_features e salvataggio CSV
@@ -124,5 +130,20 @@ figure('Name','Matrice di Confusione - Set completo');
 cm_ens = confusionchart(y_gt_rounded, y_pred_rounded, ...
     'RowSummary','row-normalized', ...
     'ColumnSummary','column-normalized', ...
-    'Title','Matrice di Confusione finale - fitrensemble', ...
+    'Title','Matrice di Confusione finale - fitrnet', ...
+    'XLabel','Predetto', 'YLabel','Reale');
+
+%% ...sul set di test vengono predette le classi:
+
+X_features_prova1 = normalize(X_features_test);
+y_pred1 = predict(model_ensemble, X_features_prova1);
+
+y_gt_rounded1 = zeros(800, 1);
+y_pred_rounded = max(0, min(10, round(y_pred1)));
+
+figure('Name','Matrice di Confusione - Set completo');
+cm_ens1 = confusionchart(y_gt_rounded1, y_pred_rounded, ...
+    'RowSummary','row-normalized', ...
+    'ColumnSummary','column-normalized', ...
+    'Title','Matrice di Confusione finale - fitrnet', ...
     'XLabel','Predetto', 'YLabel','Reale');
